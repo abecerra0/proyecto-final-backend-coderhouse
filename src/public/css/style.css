@@ -1,0 +1,41 @@
+
+h1 {
+    color: rgb(245, 249, 251); 
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 2em;
+    margin-top: 20px;
+}
+
+.contenedorCards {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    background: linear-gradient(to bottom, #7ab1c3, #7ab1c3); 
+    padding: 50px;
+    gap: 100px;
+}
+
+.cards {
+    border: 1px solid #000000;
+    border-radius: px;
+    margin: 10px;
+    padding: 20px;
+    min-width: 50px;
+    max-width: 50px;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 15px rgba(0, 105, 148, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+.cards:hover {transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 105, 148, 0.3); 
+}
+
+body {
+    font-family: 'Open Sans', sans-serif; 
+    background-color: #7ab1c3; 
+    color: #000000; 
+}
