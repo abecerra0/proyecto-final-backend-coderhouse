@@ -6,6 +6,7 @@ import viewsRouter from "./routes/views.router.js";
 import { Server } from "socket.io";
 const app = express();
 const PUERTO = 8080;
+import "./database.js";
 
 // Middlewares
 app.use(express.json()); // Nos permite leer archivos JSON
@@ -28,7 +29,7 @@ const httpServer = app.listen(PUERTO, () => {
 
 const io = new Server(httpServer);
 
-import ProductManager from "./manager/product.manager.js";
+import ProductManager from "./dao/product.manager.js";
 const manager = new ProductManager("./src/data/products.json");
 
 io.on("connection", async (socket) => {

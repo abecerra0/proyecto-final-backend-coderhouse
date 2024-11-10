@@ -34,5 +34,14 @@
     "thumbnail": "https://example.com/falda.jpg",
     "code": "128",
     "stock": 25
+  },
+  {
+    "id": 7,
+    "title": "Remera",
+    "description": "Lino",
+    "price": "200",
+    "img": "AAA",
+    "code": "988",
+    "stock": "10"
   }
 ]

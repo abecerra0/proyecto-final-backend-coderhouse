@@ -1,7 +1,7 @@
 import express from "express";
-import ProductManager from "../manager/product.manager.js";
+import ProductManager from "../dao/product.manager.db.js";
 
-const manager = new ProductManager("./src/data/products.json");
+const manager = new ProductManager();
 const router = express.Router();
 
 //1) La ruta raíz GET / deberá listar todos los productos de la base.
@@ -9,7 +9,16 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const limit = req.query.limit;
-    const productos = await manager.getProducts();
+    const page = req.query.page;
+    const sort = req.query.sort;
+    const query = req.query.query;
+
+    const productos = await manager.getProducts({
+      limit,
+      page,
+      sort,
+      query,
+    });
 
     if (limit) {
       res.json(productos.slice(0, limit));
@@ -26,7 +35,7 @@ router.get("/:pid", async (req, res) => {
   let id = req.params.pid;
 
   try {
-    const productoBuscado = await manager.getProductById(parseInt(id));
+    const productoBuscado = await manager.getProductById(id);
 
     if (!productoBuscado) {
       res.send("Producto no encontrado");
@@ -34,7 +43,7 @@ router.get("/:pid", async (req, res) => {
       res.json(productoBuscado);
     }
   } catch (error) {
-    res.status(500).send("Error del servidor, llovera todo el fin de semana");
+    res.status(500).send("Error del servidor");
   }
 });
 
@@ -46,7 +55,7 @@ router.post("/", async (req, res) => {
     await manager.addProduct(nuevoProducto);
     res.status(201).send("Producto agregado exitosamente");
   } catch (error) {
-    res.status(500).send("Terrible error fatal, todo esta mal");
+    res.status(500).send("Error al agregar producto");
   }
 });
 
@@ -56,11 +65,11 @@ router.post("/", async (req, res) => {
 router.put("/:pid", async (req, res) => {
   const { pid } = req.params; // Obtener el ID del producto desde los parámetros de la URL
   const updateData = req.body;
-  const product = await manager.getProductById(Number(pid));
+  const product = await manager.getProductById(pid);
   if (!product) {
     return res
       .status(404)
-      .json({ status: "error", message: "Product not found" });
+      .json({ status: "error", message: "Producto no encontrado" });
   }
   // Evitar que se actualice el campo 'id' si está en los datos enviados
   if (updateData.id) {
@@ -69,7 +78,7 @@ router.put("/:pid", async (req, res) => {
       .json({ status: "error", message: "Cannot update 'id' field" });
   }
   const updatedProduct = { ...product, ...updateData };
-  await manager.updateProduct(Number(pid), updatedProduct);
+  await manager.updateProduct(pid, updatedProduct);
   res.status(200).json({ status: "ok", payload: updatedProduct });
 });
 
@@ -78,7 +87,7 @@ router.delete("/:pid", async (req, res) => {
   let id = req.params.pid;
 
   try {
-    await manager.deleteProduct(parseInt(id));
+    await manager.deleteProduct(id);
     res.send("Producto eliminado");
   } catch (error) {
     res.status(500).send("Error al querer borrar un producto");
