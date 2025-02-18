@@ -1,9 +1,8 @@
 import { Router } from "express";
-
-const router = Router();
-
 import ProductsModel from "../models/products.model.js";
 import CartModel from "../models/carts.model.js";
+
+const router = Router();
 
 router.get("/products", async (req, res) => {
   const limit = req.query.limit;

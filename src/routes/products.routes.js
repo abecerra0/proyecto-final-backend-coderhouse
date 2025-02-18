@@ -1,97 +1,67 @@
-import express from "express";
-import ProductManager from "../dao/product.manager.db.js";
+import { Router } from "express";
+import Product from "../models/products.model.js";
+import passportCb from "../middlewares/passportCb.mid.js";
 
-const manager = new ProductManager();
-const router = express.Router();
+const productsRouter = Router();
 
-//1) La ruta raíz GET / deberá listar todos los productos de la base.
-//(Incluyendo la limitación ?limit del desafío anterior).
-router.get("/", async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
-    const limit = req.query.limit;
-    const page = req.query.page;
-    const sort = req.query.sort;
-    const query = req.query.query;
-
-    const productos = await manager.getProducts({
-      limit,
-      page,
-      sort,
-      query,
-    });
-
-    if (limit) {
-      res.json(productos.slice(0, limit));
-    } else {
-      res.json(productos);
-    }
+    const data = req.body;
+    data.owner_id = req.user_id;
+    const response = await Product.create(data);
+    return res.status(201).json({ message: "Creado", response });
   } catch (error) {
-    res.status(500).send("Error interno del servidor");
+    next(error);
   }
-});
+};
 
-//2) La ruta GET /:pid deberá traer sólo el producto con el id proporcionado
-router.get("/:pid", async (req, res) => {
-  let id = req.params.pid;
-
+const readAllProducts = async (req, res, next) => {
   try {
-    const productoBuscado = await manager.getProductById(id);
-
-    if (!productoBuscado) {
-      res.send("Producto no encontrado");
-    } else {
-      res.json(productoBuscado);
-    }
+    const response = await Product.find();
+    return res.status(200).json({ message: "Leyendo", response });
   } catch (error) {
-    res.status(500).send("Error del servidor");
+    next(error);
   }
-});
+};
 
-//3) La ruta raíz POST / deberá agregar un nuevo producto
-router.post("/", async (req, res) => {
-  const nuevoProducto = req.body;
-
+const readOneProduct = async (req, res, next) => {
   try {
-    await manager.addProduct(nuevoProducto);
-    res.status(201).send("Producto agregado exitosamente");
-  } catch (error) {
-    res.status(500).send("Error al agregar producto");
-  }
-});
-
-//4) La ruta PUT /:pid deberá tomar un producto y actualizarlo por los campos enviados desde body.
-//NUNCA se debe actualizar o eliminar el id al momento de hacer dicha actualización.
-
-router.put("/:pid", async (req, res) => {
-  const { pid } = req.params; // Obtener el ID del producto desde los parámetros de la URL
-  const updateData = req.body;
-  const product = await manager.getProductById(pid);
-  if (!product) {
+    const { pid } = req.params;
+    const response = await Product.findById(pid);
     return res
-      .status(404)
-      .json({ status: "error", message: "Producto no encontrado" });
-  }
-  // Evitar que se actualice el campo 'id' si está en los datos enviados
-  if (updateData.id) {
-    return res
-      .status(400)
-      .json({ status: "error", message: "Cannot update 'id' field" });
-  }
-  const updatedProduct = { ...product, ...updateData };
-  await manager.updateProduct(pid, updatedProduct);
-  res.status(200).json({ status: "ok", payload: updatedProduct });
-});
-
-//5) La ruta DELETE /:pid deberá eliminar el producto con el pid indicado.
-router.delete("/:pid", async (req, res) => {
-  let id = req.params.pid;
-
-  try {
-    await manager.deleteProduct(id);
-    res.send("Producto eliminado");
+      .status(200)
+      .json({ message: "Leer por identificacion", response });
   } catch (error) {
-    res.status(500).send("Error al querer borrar un producto");
+    next(error);
   }
-});
+};
 
-export default router;
+const updateOneProduct = async (req, res, next) => {
+  try {
+    const { pid } = req.params;
+    const data = req.body;
+    const opt = { new: true };
+    const response = await Product.findByIdAndUpdate(pid, data, opt);
+    return res.status(200).json({ message: "Actualizar", response });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const destroyOneProduct = async (req, res, next) => {
+  try {
+    const { pid } = req.params;
+    const response = await Product.findByIdAndDelete(pid);
+    return res.status(200).json({ message: "Eliminado", response });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+productsRouter.post("/", passportCb("jwt-adm"), createProduct);
+productsRouter.get("/", readAllProducts);
+productsRouter.get("/:pid", readOneProduct);
+productsRouter.put("/:pid", passportCb("jwt-adm"), updateOneProduct);
+productsRouter.delete("/:pid", passportCb("jwt-adm"), destroyOneProduct);
+
+export default productsRouter;
