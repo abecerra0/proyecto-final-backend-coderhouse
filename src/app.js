@@ -1,10 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "../src/utils/env.util.js";
 import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import MongoStore from "connect-mongo";
-import { engine } from "express-handlebars";
+//import MongoStore from "connect-mongo";
+//import { engine } from "express-handlebars";
 import router from "./routes/index.router.js";
 import errorHandler from "./middlewares/errorHandler.mid.js";
 import pathHandler from "./middlewares/pathHandler.mid.js";

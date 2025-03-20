@@ -3,8 +3,11 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 import dotenv from "dotenv";
 import User from "../models/users.model.js";
+import { usersManager } from "../dao/index.dao.js";
 import { compareHash, createHash } from "../utils/hash.util.js";
-import createToken from "../utils/token.util.js";
+import { createToken } from "../utils/token.util.js";
+import crypto from "crypto";
+import verifyAccount from "../utils/verifyAccount.util.js";
 dotenv.config();
 
 passport.use(
@@ -20,8 +23,10 @@ passport.use(
         if (one) {
           return done(null, null, { message: "Invalido", statusCode: 401 });
         }
-        req.body.password = createHash(password);
+        const verifyCode = crypto.randomBytes(12).toString("hex");
+        req.body.verifyCode = verifyCode;
         const user = await User.create(req.body);
+        await verifyAccount({ to: email, verifyCode });
         done(null, user);
       } catch (error) {
         done(error);
@@ -38,6 +43,10 @@ passport.use(
       try {
         const user = await User.findOne({ email });
         if (!user) {
+          return done(null, null, { message: "Invalido", statusCode: 401 });
+        }
+        const verifyUser = user.verify;
+        if (!verifyUser) {
           return done(null, null, { message: "Invalido", statusCode: 401 });
         }
         const verifyPassword = compareHash(password, user.password);

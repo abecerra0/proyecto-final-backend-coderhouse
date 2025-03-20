@@ -12,6 +12,8 @@ const schema = new Schema(
       type: String,
       default: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png",
     },
+    verifyCode: { type: String, required: true },
+    verify: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

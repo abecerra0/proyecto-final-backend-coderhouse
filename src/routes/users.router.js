@@ -1,54 +1,55 @@
-import { Router } from "express";
+import CustomRouter from "../utils/CustomRouter.js";
 import User from "../models/users.model.js";
 import passportCb from "../middlewares/passportCb.mid.js";
 
-const usersRouter = Router();
-
-const createUser = async (req, res, next) => {
-  try {
-    const data = req.body;
-    const response = await User.create(data);
-    return res.status(201).json({ message: "Creado", response });
-  } catch (error) {
-    next(error);
-  }
+const createUser = async (req, res) => {
+  const data = req.body;
+  const response = await User.create(data);
+  return res.status(201).json({ message: "Creado", response });
 };
 
-const readOneUser = async (req, res, next) => {
-  try {
-    const { uid } = req.params;
-    const reesponse = await User.findById(uid);
-    return res.status(200).json({ message: "Leido por Id", response });
-  } catch (error) {
-    next(error);
-  }
+const readOneUser = async (req, res) => {
+  const { uid } = req.params;
+  const reesponse = await User.findById(uid);
+  return res.status(200).json({ message: "Leido por Id", response });
 };
 
-const updateOneUser = async (req, res, next) => {
-  try {
-    const { uid } = req.params;
-    const data = req.body;
-    const opt = { new: true };
-    const response = await User.findByIdAndUpdate(uid, data, opt);
-    return res.status(200).json({ message: "Actualizar", response });
-  } catch (error) {
-    return next(error);
-  }
+const updateOneUser = async (req, res) => {
+  const { uid } = req.params;
+  const data = req.body;
+  const opt = { new: true };
+  const response = await User.findByIdAndUpdate(uid, data, opt);
+  return res.status(200).json({ message: "Actualizar", response });
 };
 
-const destroyOneUser = async (req, res, next) => {
-  try {
-    const { uid } = req.params;
-    const response = await User.findByIdAndDelete(uid);
-    return res.status(200).json({ message: "Eliminado", response });
-  } catch (error) {
-    return next(error);
-  }
+const destroyOneUser = async (req, res) => {
+  const { uid } = req.params;
+  const response = await User.findByIdAndDelete(uid);
+  return res.status(200).json({ message: "Eliminado", response });
 };
 
-usersRouter.post("/", createUser);
-usersRouter.get("/:uid", readOneUser);
-usersRouter.put("/:uid", passportCb("jwt-auth"), updateOneUser);
-usersRouter.delete("/:uid", passportCb("jwt-auth"), destroyOneUser);
+class UsersRouter extends CustomRouter {
+  constructor() {
+    super();
+    this.init();
+  }
+  init = () => {
+    this.create("/", ["PUBLIC"], createUser);
+    this.read("/:uid", ["USER", "ADMIN"], readOneUser);
+    this.update(
+      "/:uid",
+      ["USER", "ADMIN"],
+      passportCb("jwt-auth"),
+      updateOneUser
+    );
+    this.destroy(
+      "/:uid",
+      ["USER", "ADMIN"],
+      passportCb("jwt-auth"),
+      destroyOneUser
+    );
+  };
+}
 
-export default usersRouter;
+const usersRouter = new UsersRouter();
+export default usersRouter.getRouter();
